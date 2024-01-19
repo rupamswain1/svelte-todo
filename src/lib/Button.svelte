@@ -22,6 +22,7 @@
     font-weight: bold;
     cursor: pointer;
     border: 1px solid black;
+    margin: 0;
   }
   .btn:hover {
     background-color: #f07943;

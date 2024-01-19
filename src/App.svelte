@@ -1,7 +1,7 @@
 <script>
   import TodoList from './lib/TodoList.svelte';
   import { v4 as uuid } from 'uuid';
-
+  let todoList;
   let todos = [
     {
       id: uuid(),
@@ -21,7 +21,7 @@
   ];
 
   const handleTodo = (event) => {
-    event.preventDefault();
+    // event.preventDefault();
     todos = [
       ...todos,
       {
@@ -30,6 +30,7 @@
         completed: false,
       },
     ];
+    todoList.clearInput();
   };
 
   const removeTodo = (event) => {
@@ -43,18 +44,22 @@
       return todo;
     });
   };
-  $: console.log(todos);
 </script>
 
 <main>
   <h3>{todos.length} Todos</h3>
   <TodoList
     {todos}
+    bind:this={todoList}
     on:addTodo={handleTodo}
     on:removeTodo={removeTodo}
     on:toggleTodo={handleToggleTodo}
   />
+  <button on:click={() => todoList.focusInput()}>Focus</button>
 </main>
 
 <style>
+  :global(body) {
+    background-color: rgb(48, 46, 46);
+  }
 </style>
