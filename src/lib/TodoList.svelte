@@ -67,7 +67,7 @@
         {@const number = index + 1}
 
         <li>
-          <div class="todo-item" class:completed={'todo-completed'}>
+          <div class="todo-item" class:todo-completed={completed}>
             <input
               class="todo-checkbox"
               type="checkbox"
@@ -77,7 +77,7 @@
                 handleToggleTodo(id, !completed);
               }}
             />
-            <span class="todo-label">
+            <span class="todo-label" class:todo-completed-label={completed}>
               {number}-{name}
             </span>
 
@@ -166,5 +166,9 @@
     flex: 1;
     margin-right: 10px;
     border-radius: 5px;
+  }
+  .todo-completed-label {
+    text-decoration: line-through;
+    opacity: 0.3;
   }
 </style>
