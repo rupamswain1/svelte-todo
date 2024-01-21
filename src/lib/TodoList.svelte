@@ -3,8 +3,11 @@
 <script>
   import Button from './Button.svelte';
   import { afterUpdate, beforeUpdate, createEventDispatcher } from 'svelte';
-  export let todos = [];
 
+  export let todos = null;
+  export let error = null;
+  export let isLoading = false;
+  export let isAdding = false;
   let inputText = '';
   let input;
   let listDiv;
@@ -19,7 +22,7 @@
   });
 
   $: {
-    autoscroll = todos.length > prevTodos.length;
+    autoscroll = todos && prevTodos && todos.length > prevTodos.length;
     prevTodos = todos;
   }
 
@@ -54,16 +57,25 @@
       completed: state,
     });
   };
+  $: console.log({ isAdding });
 </script>
 
 <div bind:this={listDiv} class="todo-container">
-  {#if todos.length === 0}
+  {#if isLoading}
+    <div class="no-item-text">
+      <p>Loading . . .</p>
+    </div>
+  {:else if error}
+    <div class="no-item-text">
+      <p>{error}</p>
+    </div>
+  {:else if !todos || todos?.length === 0}
     <div class="no-item-text">
       <p>No Todo Items are available!!</p>
     </div>
   {:else}
     <ul>
-      {#each todos as { id, name, completed }, index (id)}
+      {#each todos as { id, title, completed }, index (id)}
         {@const number = index + 1}
 
         <li>
@@ -78,9 +90,8 @@
               }}
             />
             <span class="todo-label" class:todo-completed-label={completed}>
-              {number}-{name}
+              {number}-{title}
             </span>
-
             <button
               class="todo-remove-btn"
               on:click={() => handleRemoveTodo(id)}>x</button
@@ -97,7 +108,7 @@
     bind:this={input}
     placeholder="Enter Todo Name"
   />
-  <Button type="submit" disabled={!inputText}>Add</Button>
+  <Button type="submit" disabled={!inputText || isAdding}>Add</Button>
 </form>
 
 <style>
