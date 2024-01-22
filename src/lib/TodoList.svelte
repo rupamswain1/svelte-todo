@@ -8,6 +8,8 @@
   export let error = null;
   export let isLoading = false;
   export let isAdding = false;
+  export let disabledItems = [];
+  export let updateDisabled = [];
   let inputText = '';
   let input;
   let listDiv;
@@ -57,7 +59,7 @@
       completed: state,
     });
   };
-  $: console.log({ isAdding });
+  $: console.log({ updateDisabled });
 </script>
 
 <div bind:this={listDiv} class="todo-container">
@@ -75,28 +77,37 @@
     </div>
   {:else}
     <ul>
-      {#each todos as { id, title, completed }, index (id)}
+      {#each todos as todo, index (todo.id)}
         {@const number = index + 1}
-
+        {@const { id, title, completed } = todo}
         <li>
-          <div class="todo-item" class:todo-completed={completed}>
-            <input
-              class="todo-checkbox"
-              type="checkbox"
-              checked={completed}
-              on:input={(event) => {
-                event.currentTarget.checked = completed;
-                handleToggleTodo(id, !completed);
-              }}
-            />
-            <span class="todo-label" class:todo-completed-label={completed}>
-              {number}-{title}
-            </span>
-            <button
-              class="todo-remove-btn"
-              on:click={() => handleRemoveTodo(id)}>x</button
+          <slot {todo} {handleToggleTodo} {index}>
+            <div
+              class="todo-item"
+              class:todo-completed={completed}
+              class:item-disabled={disabledItems.includes(id) ||
+                updateDisabled.includes(id)}
             >
-          </div>
+              <input
+                class="todo-checkbox"
+                type="checkbox"
+                checked={completed}
+                on:input={(event) => {
+                  event.currentTarget.checked = completed;
+                  handleToggleTodo(id, !completed);
+                }}
+              />
+              <slot name="title">
+                <span class="todo-label" class:todo-completed-label={completed}>
+                  {number}-{title}
+                </span>
+              </slot>
+              <button
+                class="todo-remove-btn"
+                on:click={() => handleRemoveTodo(id)}>x</button
+              >
+            </div>
+          </slot>
         </li>
       {/each}
     </ul>
@@ -181,5 +192,9 @@
   .todo-completed-label {
     text-decoration: line-through;
     opacity: 0.3;
+  }
+  .item-disabled {
+    opacity: 0.1;
+    cursor: not-allowed;
   }
 </style>
