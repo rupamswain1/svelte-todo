@@ -3,13 +3,16 @@
   import TodoList from './lib/TodoList.svelte';
   import { v4 as uuid } from 'uuid';
   import { fly } from 'svelte/transition';
+  import spin from './lib/transitions/spin';
   let todoList;
   let todos = null;
+
   let error = null;
   let isLoading = false;
   let isAdding = false;
   let disabledItems = [];
   let updateDisabled = [];
+  let showTodo = true;
   async function loadTodos() {
     isLoading = true;
     fetch('https://jsonplaceholder.typicode.com/todos?_limit=10').then(
@@ -44,12 +47,12 @@
       if (response.ok) {
         const todo = await response.json();
         todos = [
-          ...todos,
           {
             id: uuid(),
             title: event.detail.title,
             completed: false,
           },
+          ...todos,
         ];
       } else {
         alert('An error has occured.');
@@ -106,28 +109,39 @@
 </script>
 
 <main>
-  <h3 style="color: white;">
-    {#key todos?.length}
-      <span style:display={'inline-block'} in:fly|local={{ y: -10 }}
-        >{todos ? todos.length : 0}</span
-      >{/key} Todos
-  </h3>
-  <TodoList
-    {todos}
-    {isLoading}
-    {error}
-    {isAdding}
-    {disabledItems}
-    {updateDisabled}
-    bind:this={todoList}
-    on:addTodo={handleTodo}
-    on:removeTodo={removeTodo}
-    on:toggleTodo={handleToggleTodo}
-    let:todo
-    let:handleToggleTodo
-    let:index
-  >
-    <!-- {@const { id, completed } = todo}
+  <div>
+    <input
+      type="checkbox"
+      checked={showTodo}
+      on:input={() => (showTodo = !showTodo)}
+    />
+    <span style:color="white">Show hide Todo</span>
+  </div>
+  {#if showTodo}
+    <div transition:spin={{ spin: 1, duration: 500 }} style="opacity=0.5">
+      <h3 style="color: white;">
+        {#key todos?.length}
+          <span style:display={'inline-block'} in:fly|local={{ y: -10 }}
+            >{todos ? todos.length : 0}</span
+          >{/key} Todos
+      </h3>
+      <TodoList
+        {todos}
+        {isLoading}
+        {error}
+        {isAdding}
+        {disabledItems}
+        {updateDisabled}
+        scrollOnAdd={'top'}
+        bind:this={todoList}
+        on:addTodo={handleTodo}
+        on:removeTodo={removeTodo}
+        on:toggleTodo={handleToggleTodo}
+        let:todo
+        let:handleToggleTodo
+        let:index
+      >
+        <!-- {@const { id, completed } = todo}
     <input
       class="todo-checkbox"
       type="checkbox"
@@ -138,13 +152,17 @@
       }}
     />
     <div>{todo.title}</div> -->
-    <span slot="title">{index + 1}-{todo.title}</span>
-  </TodoList>
-  <button on:click={() => todoList.focusInput()}>Focus</button>
+        <!-- <span slot="title">{index + 1}-{todo.title}</span> -->
+      </TodoList>
+
+      <button on:click={() => todoList.focusInput()}>Focus</button>
+    </div>
+  {/if}
 </main>
 
 <style>
   :global(body) {
     background-color: rgb(48, 46, 46);
+    color: white;
   }
 </style>

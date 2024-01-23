@@ -3,23 +3,40 @@
 <script>
   import Button from './Button.svelte';
   import { afterUpdate, beforeUpdate, createEventDispatcher } from 'svelte';
-  import { fade, scale } from 'svelte/transition';
+  import { crossfade, fade, scale } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
+
+  const [send, receive] = crossfade({
+    duration: 400,
+    fallback(node) {
+      return scale(node, { start: 0.5, duration: 300 });
+    },
+  });
+
   export let todos = null;
   export let error = null;
   export let isLoading = false;
   export let isAdding = false;
   export let disabledItems = [];
   export let updateDisabled = [];
+  export let scrollOnAdd = undefined;
   let inputText = '';
   let input;
   let listDiv;
   let prevTodos = todos;
   let autoscroll = false;
+  let done = null;
+  let todo = null;
   //Lifecycles
   afterUpdate(() => {
-    if (autoscroll) {
-      listDiv.scrollTo(0, listDiv.scrollHeight);
-      autoscroll = false;
+    if (scrollOnAdd) {
+      let pos;
+      if (scrollOnAdd === 'top') pos = 0;
+      if (scrollOnAdd === 'bottom') pos = listDiv.scrollHeight;
+      if (autoscroll) {
+        listDiv.scrollTo(0, pos);
+        autoscroll = false;
+      }
     }
   });
 
@@ -59,7 +76,9 @@
       completed: state,
     });
   };
-  $: console.log({ updateDisabled });
+  $: done = todos ? todos.filter((t) => t.completed) : [];
+
+  $: todo = todos ? todos.filter((t) => !t.completed) : [];
 </script>
 
 <div bind:this={listDiv} class="todo-container">
@@ -76,42 +95,61 @@
       <p>No Todo Items are available!!</p>
     </div>
   {:else}
-    <ul>
-      {#each todos as todo, index (todo.id)}
-        {@const number = index + 1}
-        {@const { id, title, completed } = todo}
-        <li>
-          <slot {todo} {handleToggleTodo} {index}>
-            <div
-              class="todo-item"
-              class:todo-completed={completed}
-              class:item-disabled={disabledItems.includes(id) ||
-                updateDisabled.includes(id)}
-              transition:scale|local={{ start: 0.5, duration: 300 }}
-            >
-              <input
-                class="todo-checkbox"
-                type="checkbox"
-                checked={completed}
-                on:input={(event) => {
-                  event.currentTarget.checked = completed;
-                  handleToggleTodo(id, !completed);
-                }}
-              />
-              <slot name="title">
-                <span class="todo-label" class:todo-completed-label={completed}>
-                  {number}-{title}
-                </span>
-              </slot>
-              <button
-                class="todo-remove-btn"
-                on:click={() => handleRemoveTodo(id)}>x</button
-              >
-            </div>
-          </slot>
-        </li>
+    <div style class="flex">
+      {#each [todo, done] as list, index}
+        <div>
+          <h2>{index === 0 ? 'Todo' : 'Done'}</h2>
+
+          <ul>
+            {#each list as todo, index (todo.id)}
+              {@const number = index + 1}
+              {@const { id, title, completed } = todo}
+              <li animate:flip={{ duration: 300 }}>
+                <slot {todo} {handleToggleTodo} {index}>
+                  <div
+                    class="todo-item"
+                    class:todo-completed={completed}
+                    class:item-disabled={disabledItems.includes(id) ||
+                      updateDisabled.includes(id)}
+                    in:receive={{ key: id }}
+                    out:send={{ key: id }}
+                  >
+                    <!-- <div
+                      class="todo-item"
+                      class:todo-completed={completed}
+                      class:item-disabled={disabledItems.includes(id) ||
+                        updateDisabled.includes(id)}
+                      transition:scale|local={{ start: 0.5, duration: 300 }}
+                    > -->
+                    <input
+                      class="todo-checkbox"
+                      type="checkbox"
+                      checked={completed}
+                      on:input={(event) => {
+                        event.currentTarget.checked = completed;
+                        handleToggleTodo(id, !completed);
+                      }}
+                    />
+                    <slot name="title">
+                      <span
+                        class="todo-label"
+                        class:todo-completed-label={completed}
+                      >
+                        {number}-{title}
+                      </span>
+                    </slot>
+                    <button
+                      class="todo-remove-btn"
+                      on:click={() => handleRemoveTodo(id)}>x</button
+                    >
+                  </div>
+                </slot>
+              </li>
+            {/each}
+          </ul>
+        </div>
       {/each}
-    </ul>
+    </div>
   {/if}
 </div>
 <form class="add-todo-form" on:submit|preventDefault={handleTodo}>
@@ -124,11 +162,14 @@
 </form>
 
 <style>
+  .flex {
+    display: flex;
+  }
   .todo-container {
     max-height: 250px;
     overflow: auto;
     background-color: rgb(70, 68, 68);
-    width: 50%;
+    /* width: 50%; */
     border-radius: 5px;
     margin-bottom: 10px;
   }
