@@ -3,7 +3,7 @@
 <script>
   import Button from './Button.svelte';
   import { afterUpdate, beforeUpdate, createEventDispatcher } from 'svelte';
-
+  import { fade, scale } from 'svelte/transition';
   export let todos = null;
   export let error = null;
   export let isLoading = false;
@@ -87,6 +87,7 @@
               class:todo-completed={completed}
               class:item-disabled={disabledItems.includes(id) ||
                 updateDisabled.includes(id)}
+              transition:scale|local={{ start: 0.5, duration: 300 }}
             >
               <input
                 class="todo-checkbox"

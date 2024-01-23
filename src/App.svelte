@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import TodoList from './lib/TodoList.svelte';
   import { v4 as uuid } from 'uuid';
+  import { fly } from 'svelte/transition';
   let todoList;
   let todos = null;
   let error = null;
@@ -105,7 +106,12 @@
 </script>
 
 <main>
-  <h3>{todos ? todos.length : 0} Todos</h3>
+  <h3 style="color: white;">
+    {#key todos?.length}
+      <span style:display={'inline-block'} in:fly|local={{ y: -10 }}
+        >{todos ? todos.length : 0}</span
+      >{/key} Todos
+  </h3>
   <TodoList
     {todos}
     {isLoading}
