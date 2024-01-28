@@ -3,6 +3,7 @@
   import TodoList from './lib/TodoList.svelte';
   import { v4 as uuid } from 'uuid';
   import { fly } from 'svelte/transition';
+  import longpress from './lib/action/longpress';
   import spin from './lib/transitions/spin';
   let todoList;
   let todos = null;
@@ -13,6 +14,10 @@
   let disabledItems = [];
   let updateDisabled = [];
   let showTodo = true;
+
+  //for actions
+  let showButton = true;
+  let duration = 1000;
   async function loadTodos() {
     isLoading = true;
     fetch('https://jsonplaceholder.typicode.com/todos?_limit=10').then(
@@ -158,6 +163,22 @@
       <button on:click={() => todoList.focusInput()}>Focus</button>
     </div>
   {/if}
+
+  <div>
+    <h3>Actions</h3>
+    <label><input type="checkbox" bind:checked={showButton} /> Toggle </label>
+    <label>
+      <input
+        type="range"
+        bind:value={duration}
+        max={4000}
+        step={100}
+      />{duration}ms
+    </label>
+    {#if showButton}
+      <button use:longpress={{ duration }}>longpress</button>
+    {/if}
+  </div>
 </main>
 
 <style>
